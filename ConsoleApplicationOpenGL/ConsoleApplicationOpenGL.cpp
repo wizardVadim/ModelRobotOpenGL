@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include "Shader.h"
+#include "Model.h"
 #define GLEW_STATIC
 #define GLFW_STATIC
 #include "GL/glew.h"
@@ -48,35 +49,13 @@ int main()
         std::cout << "GLEW init failed" << std::endl;
         return -1;
     }
-
-    GLuint VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.5f,  0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f
-    };
-
-    GLuint indices[] = { 0, 1, 2, 2, 3, 0 };
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    glEnable(GL_DEPTH_TEST);
 
     Shader shader;
     shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
     shader.use();
+
+    Model loadedModel("models/lab3.obj");
 
     glm::mat4 projection = glm::perspective(
         glm::radians(45.0f),
@@ -85,6 +64,8 @@ int main()
         100.0f
     );
     shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     while (!glfwWindowShouldClose(window))
     {
@@ -96,26 +77,28 @@ int main()
             cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
             cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            glfwTerminate();
 
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         shader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        shader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrix));
         float timeValue = glfwGetTime();
         float redValue = (sin(timeValue) / 2.0f) + 0.5f;
         float greenValue = (cos(timeValue) / 2.0f) + 0.5f;
-        shader.setUniform4f("ourColor", redValue, greenValue, 0.5f, 1.0f);
+        shader.setUniform3f("lightColor", 1.0f, 1.0f, 1.0f);
+        shader.setUniform3f("objectColor", redValue, greenValue, 0.5f);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader.use();
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        loadedModel.Draw(shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwTerminate();
 
     }
 

@@ -28,7 +28,17 @@ float const LIGHT_RED = 1.0f;
 float const LIGHT_GREEN = 1.0f;
 float const LIGHT_BLUE = 1.0f;
 
+int currentArm = 1;
+const float detailsSpeed = 0.0001f;
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+Shader getArm1Shader(glm::mat4 projection);
+Shader getArm2Shader(glm::mat4 projection);
+Shader getRollerShader(glm::mat4 projection);
+Shader getMainColumnShader(glm::mat4 projection);
+Shader getRotateDetailShader(glm::mat4 projection);
+Shader getFieldShader(glm::mat4 projection);
+glm::vec3 getPositionFromMatrix(const glm::mat4& matrix);
 
 int main()
 {
@@ -62,43 +72,29 @@ int main()
         100.0f
     );
 
-    Shader shader;
-    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
-    shader.use();
-    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+    Shader arm1Shader = getArm1Shader(projection);
+    Shader arm2Shader = getArm2Shader(projection);
+    Shader rollerShader = getRollerShader(projection);
+    Shader mainColumnShader = getMainColumnShader(projection);
+    Shader rotateDetailShader = getRotateDetailShader(projection);
+    Shader fieldShader = getFieldShader(projection);
 
-    shader.setUniform3f("material.ambient", 0.282f, 0.387f, 0.277f);
-    shader.setUniform3f("material.diffuse", 0.4f, 0.6f, 0.4f);    
-    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);   
-    shader.setUniform1f("material.shininess", 32.0f);
-
-    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);       
-    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);        
-    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);        
-    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
-
-    Shader shader2;
-    shader2.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
-    shader2.use();
-    shader2.setUniformMatrix4fv("projection", glm::value_ptr(projection));
-
-    shader2.setUniform3f("material.ambient", 0.108f, 0.153f, 0.124f);
-    shader2.setUniform3f("material.diffuse", 0.2f, 0.3f, 0.25f);
-    shader2.setUniform3f("material.specular", 0.3f, 0.3f, 0.3f);
-    shader2.setUniform1f("material.shininess", 16.0f);
-
-    shader2.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
-    shader2.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
-    shader2.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
-    shader2.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
-
-    Model loadedModel("models/lab3.obj");
+    Model arm1Model("models/arm1.obj");
+    Model arm2Model("models/arm2.obj");
+    Model rollerModel("models/roller.obj");
+    Model mainColumnModel("models/main_column.obj");
+    Model rotateDetailModel("models/rotate_detail.obj");
     Model fieldModel("models/field.obj");
 
-    glm::mat4 modelMatrixLab = glm::mat4(1.0f);
+    glm::mat4 modelMatrixArm1 = glm::mat4(1.0f);
+    glm::mat4 modelMatrixArm2 = glm::mat4(1.0f);
+    glm::mat4 modelMatrixRoller = glm::mat4(1.0f);
+    glm::mat4 modelMatrixMainColumn = glm::mat4(1.0f);
+    glm::mat4 modelMatrixRotateDetail = glm::mat4(1.0f);
     glm::mat4 modelMatrixField = glm::mat4(1.0f);
     modelMatrixField = glm::translate(modelMatrixField, glm::vec3(0.0f, -0.03f, 0.0f));
 
+    bool armChangedThisFrame = false;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -113,26 +109,109 @@ int main()
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwTerminate();
 
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            if (!armChangedThisFrame)
+                currentArm == 1 ? currentArm = 2 : currentArm = 1;
+                armChangedThisFrame = true;
+
+        } else { armChangedThisFrame = false; }
+
+        if (glfwGetKey(window, GLFW_KEY_PAGE_UP) == GLFW_PRESS) {
+            glm::vec3 vecTranslate = glm::vec3(0.0f, detailsSpeed, 0.0f);
+            if (currentArm == 1)
+                if (getPositionFromMatrix(modelMatrixArm1).y < 0.0f)
+                    modelMatrixArm1 = glm::translate(modelMatrixArm1, vecTranslate);
+            else
+                if (getPositionFromMatrix(modelMatrixArm2).y < 0.0f)
+                    modelMatrixArm2 = glm::translate(modelMatrixArm2, vecTranslate);
+        }
+        if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) {
+            glm::vec3 vecTranslate = glm::vec3(0.0f, -detailsSpeed, 0.0f);
+            if (currentArm == 1)
+                modelMatrixArm1 = glm::translate(modelMatrixArm1, vecTranslate);
+            else
+                modelMatrixArm2 = glm::translate(modelMatrixArm2, vecTranslate);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            glm::vec3 vecTranslate = glm::vec3(0.0f, 0.0f, detailsSpeed);
+            modelMatrixRoller = glm::translate(modelMatrixRoller, vecTranslate);
+            modelMatrixArm1 = glm::translate(modelMatrixArm1, vecTranslate);
+            modelMatrixArm2 = glm::translate(modelMatrixArm2, vecTranslate);
+            modelMatrixRotateDetail = glm::translate(modelMatrixRotateDetail, vecTranslate);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            glm::vec3 vecTranslate = glm::vec3(0.0f, 0.0f, -detailsSpeed);
+            modelMatrixRoller = glm::translate(modelMatrixRoller, vecTranslate);
+            modelMatrixArm1 = glm::translate(modelMatrixArm1, vecTranslate);
+            modelMatrixArm2 = glm::translate(modelMatrixArm2, vecTranslate);
+            modelMatrixRotateDetail = glm::translate(modelMatrixRotateDetail, vecTranslate);
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            glm::vec3 vecRotate = glm::vec3(0.0f, 0.0f, 1.0f);
+            glm::vec3 armCenter = glm::vec3(0.0f, 0.0003f, 0.0f);
+            modelMatrixArm1 = glm::translate(modelMatrixArm1, armCenter);
+            modelMatrixArm1 = glm::rotate(modelMatrixArm1, glm::radians(0.01f), vecRotate);
+            modelMatrixArm2 = glm::translate(modelMatrixArm2, armCenter);
+            modelMatrixArm2 = glm::rotate(modelMatrixArm2, glm::radians(0.01f), vecRotate);
+            /*modelMatrixArm2 = glm::rotate(modelMatrixArm2, glm::radians(0.01f), vecRotate);
+            modelMatrixRotateDetail = glm::rotate(modelMatrixRotateDetail, glm::radians(0.01f), vecRotate);*/
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            glm::vec3 vecRotate = glm::vec3(0.0f, 0.0f, 1.0f);
+            glm::vec3 armCenter = glm::vec3(0.0f, 0.0003f, 0.0f);
+            modelMatrixArm1 = glm::translate(modelMatrixArm1, -armCenter);
+            modelMatrixArm1 = glm::rotate(modelMatrixArm1, glm::radians(-0.01f), vecRotate);
+            modelMatrixArm2 = glm::translate(modelMatrixArm2, -armCenter);
+            modelMatrixArm2 = glm::rotate(modelMatrixArm2, glm::radians(-0.01f), vecRotate);
+            /*modelMatrixArm1 = glm::rotate(modelMatrixArm1, glm::radians(-0.01f), vecRotate);
+            modelMatrixArm2 = glm::rotate(modelMatrixArm2, glm::radians(-0.01f), vecRotate);
+            modelMatrixRotateDetail = glm::rotate(modelMatrixRotateDetail, glm::radians(-0.01f), vecRotate);*/
+        }
+
         glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader.use();
-        shader.setUniformMatrix4fv("view", glm::value_ptr(view));
-        shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
-        shader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixLab));
-        /*shader.setUniform3f("lightColor", LIGHT_RED, LIGHT_GREEN, LIGHT_BLUE);
-        shader.setUniform3f("objectColor", 0.282f, 0.387f, 0.277f);*/
-        loadedModel.Draw(shader);
+        arm1Shader.use();
+        arm1Shader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        arm1Shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        arm1Shader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixArm1));
+        arm1Model.Draw(arm1Shader);
 
-        shader2.use();
-        shader2.setUniformMatrix4fv("view", glm::value_ptr(view));
-        shader2.setUniformMatrix4fv("projection", glm::value_ptr(projection));
-        shader2.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixField));
-        /*shader2.setUniform3f("lightColor", LIGHT_RED, LIGHT_GREEN, LIGHT_BLUE);
-        shader2.setUniform3f("objectColor", 0.108f, 0.153f, 0.124f);*/
-        fieldModel.Draw(shader2);
+        arm2Shader.use();
+        arm2Shader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        arm2Shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        arm2Shader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixArm2));
+        arm2Model.Draw(arm2Shader);
+
+        rollerShader.use();
+        rollerShader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        rollerShader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        rollerShader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixRoller));
+        rollerModel.Draw(rollerShader);
+
+        mainColumnShader.use();
+        mainColumnShader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        mainColumnShader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        mainColumnShader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixMainColumn));
+        mainColumnModel.Draw(mainColumnShader);
+
+        rotateDetailShader.use();
+        rotateDetailShader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        rotateDetailShader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        rotateDetailShader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixRotateDetail));
+        rotateDetailModel.Draw(rotateDetailShader);
+
+        fieldShader.use();
+        fieldShader.setUniformMatrix4fv("view", glm::value_ptr(view));
+        fieldShader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+        fieldShader.setUniformMatrix4fv("model", glm::value_ptr(modelMatrixField));
+        fieldModel.Draw(fieldShader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -175,4 +254,122 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     front.y = sin(glm::radians(pitch));
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
+}
+
+Shader getArm1Shader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.282f * 0.3f, 0.387f * 0.3f, 0.277f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.282f, 0.387f, 0.277f);
+    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setUniform1f("material.shininess", 32.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+Shader getArm2Shader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.282f * 0.3f, 0.387f * 0.3f, 0.277f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.282f, 0.387f, 0.277f);
+    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setUniform1f("material.shininess", 32.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+Shader getRollerShader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.474f * 0.3f, 0.474f * 0.3f, 0.474f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.474f, 0.474f, 0.474f);
+    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setUniform1f("material.shininess", 32.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+Shader getMainColumnShader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.410f * 0.3f, 0.403f * 0.3f, 0.439f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.410f, 0.403f, 0.439f);
+    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setUniform1f("material.shininess", 32.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+Shader getRotateDetailShader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.292f * 0.3f, 0.292f * 0.3f, 0.292f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.292f, 0.292f, 0.292f);
+    shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
+    shader.setUniform1f("material.shininess", 32.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+Shader getFieldShader(glm::mat4 projection) {
+    Shader shader;
+    shader.loadFromFiles("shaders/vertex.txt", "shaders/fragment.txt");
+    shader.use();
+    shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
+
+    shader.setUniform3f("material.ambient", 0.108f * 0.3f, 0.153f * 0.3f, 0.124f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.108f, 0.153f, 0.124f);
+    shader.setUniform3f("material.specular", 0.3f, 0.3f, 0.3f);
+    shader.setUniform1f("material.shininess", 8.0f);
+
+    shader.setUniform3f("light.position", 2.0f, 5.0f, 3.0f);
+    shader.setUniform3f("light.ambient", 0.1f, 0.1f, 0.1f);
+    shader.setUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    shader.setUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    return shader;
+}
+
+glm::vec3 getPositionFromMatrix(const glm::mat4& matrix) {
+    return glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]);
 }

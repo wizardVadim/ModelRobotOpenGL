@@ -1,4 +1,6 @@
-﻿     Создается библиотека C:\Users\VadimPC\source\repos\ConsoleApplicationOpenGL\x64\Debug\ConsoleApplicationOpenGL.lib и объект C:\Users\VadimPC\source\repos\ConsoleApplicationOpenGL\x64\Debug\ConsoleApplicationOpenGL.exp
+﻿  ConsoleApplicationOpenGL.cpp
+  LINK : не найден или не выполнена сборка C:\Users\VadimPC\source\repos\ConsoleApplicationOpenGL\x64\Debug\ConsoleApplicationOpenGL.exe при последней инкрементной компоновке; выполняется полная компоновка
+     Создается библиотека C:\Users\VadimPC\source\repos\ConsoleApplicationOpenGL\x64\Debug\ConsoleApplicationOpenGL.lib и объект C:\Users\VadimPC\source\repos\ConsoleApplicationOpenGL\x64\Debug\ConsoleApplicationOpenGL.exp
 LINK : warning LNK4098: библиотека по умолчанию "MSVCRT" конфликтует с использованием других библиотек; используйте /NODEFAULTLIB:library
 LINK : warning LNK4217: Символ "glewInit", определенный в "glew.obj", импортирован "ConsoleApplicationOpenGL.obj" в функции "main".
 LINK : warning LNK4217: Символ "__glewBindBuffer", определенный в "glew.obj", импортирован "ConsoleApplicationOpenGL.obj" в функции ""private: void __cdecl Mesh::setupMesh(void)" (?setupMesh@Mesh@@AEAAXXZ)".

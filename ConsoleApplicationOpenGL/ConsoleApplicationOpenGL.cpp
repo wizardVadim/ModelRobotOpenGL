@@ -338,8 +338,8 @@ Shader getArm1Shader(glm::mat4 projection) {
     shader.use();
     shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
 
-    shader.setUniform3f("material.ambient", 0.282f * 0.3f, 0.387f * 0.3f, 0.277f * 0.3f);
-    shader.setUniform3f("material.diffuse", 0.282f, 0.387f, 0.277f);
+    shader.setUniform3f("material.ambient", 0.124f * 0.3f, 0.124f * 0.3f, 0.124f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.124f, 0.124f, 0.124f);
     shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
     shader.setUniform1f("material.shininess", 32.0f);
 
@@ -357,8 +357,8 @@ Shader getArm2Shader(glm::mat4 projection) {
     shader.use();
     shader.setUniformMatrix4fv("projection", glm::value_ptr(projection));
 
-    shader.setUniform3f("material.ambient", 0.282f * 0.3f, 0.387f * 0.3f, 0.277f * 0.3f);
-    shader.setUniform3f("material.diffuse", 0.282f, 0.387f, 0.277f);
+    shader.setUniform3f("material.ambient", 0.124f * 0.3f, 0.124f * 0.3f, 0.124f * 0.3f);
+    shader.setUniform3f("material.diffuse", 0.124f, 0.124f, 0.124f);
     shader.setUniform3f("material.specular", 0.5f, 0.5f, 0.5f);
     shader.setUniform1f("material.shininess", 32.0f);
 

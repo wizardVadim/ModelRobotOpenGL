@@ -11,3 +11,6 @@
 | Down | Вращательное движение стенда с руками вниз  |
 | Left | Движение стенда с руками влево  |
 | Right | Движение стенда с руками вправо  |
+
+<img width="1311" height="820" alt="image" src="https://github.com/user-attachments/assets/681b133e-c932-4489-a0b3-6fb09f415ac9" />
+

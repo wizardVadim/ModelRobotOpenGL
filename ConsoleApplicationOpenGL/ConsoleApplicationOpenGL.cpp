@@ -161,11 +161,12 @@ int main()
             
             }
             else if (currentArm == 2) {
-                if (currentPosArm2Y < maxPosArmsY)
+                if (currentPosArm2Y < maxPosArmsY) {
                     modelMatrixArm2 = glm::translate(modelMatrixArm2, vecTranslate);
-                yArm2Pivot += detailsSpeed;
-                currentPosArm2Y += detailsSpeed;
-                arm2pivot = glm::vec3(xPivot, yArm2Pivot, 0.0f);
+                    yArm2Pivot += detailsSpeed;
+                    currentPosArm2Y += detailsSpeed;
+                    arm2pivot = glm::vec3(xPivot, yArm2Pivot, 0.0f);
+                }
             }
         }
         if (glfwGetKey(window, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS) {
